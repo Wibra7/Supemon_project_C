@@ -2,6 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+
+const char *moveNames[] = {"Scratch", "Grawl", "Pound", "Foliage", "Shell","Uppercut","Caillasse"};
+const char *stats[] = {"Attack", "Defense", "Evasion", "Accuracy"};
+const char *supemonPrefixes[] = {"Supa", "Hyper", "Mega", "Top"};
+const char *supemonSuffixes[] = {"piaf", "coin-coin", "cabot", "minou", "clapiot","bourrin"};
+
 
 // Define Item IDs for easy reference
 #define POTION 0
@@ -39,14 +46,13 @@ typedef struct {
     Move moves[2];
 } Supemon;
 
-// Define a structure for the Player
+
 typedef struct {
     char name[50];
-    Supemon supemons[3]; // Assuming the player can have up to 3 Supémons
+    Supemon supemons[3]; 
     int supocoins;
-    Supemon *selectedSupemon; // Pointer to the currently selected fighting Supémon
-    // Assuming a simple list of items as an array of integers for their IDs
-    int items[10]; // Placeholder for item inventory
+    Supemon *selectedSupemon; 
+    int items[10]; 
 } Player;
 
 
@@ -113,14 +119,16 @@ void initializeSupemons(Supemon *supmander, Supemon *supasaur, Supemon *supirtle
 // Function prototypes//////////////////////////////////////////////////////////////////////////////////////
 void showWelcomeScreen();
 void initializeSupemons(Supemon *supmander, Supemon *supasaur, Supemon *supirtle);
-
+bool tryToRunAway(Player *player, Supemon *enemySupemon);
 void mainMenu(Player *player);
 void goIntoTheWild(Player *player);
 void visitShop(Player *player);
 void visitSupemonCenter(Player *player);
 void leaveGame(Player *player, int saveGame);
-
+void chooseStarterSupemon(Player *player, Supemon *supmander, Supemon *supasaur, Supemon *supirtle);
 void initializeSupemons(Supemon *supmander, Supemon *supasaur, Supemon *supirtle);
+void generateEnemySupemon(Supemon *enemySupemon);
+
 
 // Main/////////////////////////////////////////////////
 
@@ -138,10 +146,10 @@ int main() {
     return 0;
 }
 
-// More functions and game logic would follow...*************************************************************************
+// More functions and game logic will follow...*************************************************************************
 
 void showWelcomeScreen() {
-    printf("Hello! Welcome to Supémon World!\n");
+    printHeader("**Hello! Welcome to Supemon World!**");
     printf("Please enter your name: ");
 }
 
@@ -340,7 +348,7 @@ void mainMenu(Player *player) {
         printHeader("Where do you want to go?");
         printf("1 - Into the Wild\n");
         printf("2 - Shop\n");
-        printf("3 - Supémon Center\n");
+        printf("3 - Supemon Center\n");
         printf("4 - Leave the Game\n");
         printf("Enter your choice: ");
         scanf("%d", &choice);
@@ -364,5 +372,64 @@ void mainMenu(Player *player) {
             default:
                 printf("Invalid choice. Please enter a number between 1 and 4.\n");
         }
+    }
+}
+
+
+
+
+
+void randomMove(Move *move) {
+    // Select a random move name from the pool
+    strcpy(move->name, moveNames[rand() % (sizeof(moveNames) / sizeof(char*))]);
+    // Random damage between 2 and 3
+    move->damage = 2 + rand() % 2;
+    // Random stat change between 1 and 2
+    move->statChange = 1 + rand() % 2;
+    // Select a random affected stat from the pool
+    strcpy(move->affectedStat, stats[rand() % (sizeof(stats) / sizeof(char*))]);
+}
+
+void generateEnemySupemon(Supemon *enemySupemon) {
+    // Randomly decide whether to use a default Supemon or create a new one
+    if (rand() % 2) {
+        // Select a random default Supemon name
+        const char *defaultNames[] = {"Supmander", "Supasaur", "Supirtle"};
+        strcpy(enemySupemon->name, defaultNames[rand() % 3]);
+    } else {
+        // Create a new Supemon name by combining a prefix and suffix
+        strcpy(enemySupemon->name, supemonPrefixes[rand() % (sizeof(supemonPrefixes) / sizeof(char*))]);
+        strcat(enemySupemon->name, supemonSuffixes[rand() % (sizeof(supemonSuffixes) / sizeof(char*))]);
+    }
+
+    // Random HP between 9 and 11
+    enemySupemon->hp = enemySupemon->maxHp = 9 + rand() % 3;
+    // Random attack and defense between 1 and 2
+    enemySupemon->attack = enemySupemon->baseAttack = 1 + rand() % 2;
+    enemySupemon->defense = enemySupemon->baseDefense = 1 + rand() % 2;
+    // Random evasion and accuracy between 1 and 2
+    enemySupemon->evasion = enemySupemon->baseEvasion = 1 + rand() % 2;
+    enemySupemon->accuracy = enemySupemon->baseAccuracy = 1 + rand() % 2;
+    // Random speed between 1 and 2
+    enemySupemon->speed = 1 + rand() % 2;
+
+    // Random moves
+    randomMove(&enemySupemon->moves[0]);
+    randomMove(&enemySupemon->moves[1]);
+}
+
+bool tryToRunAway(Player *player, Supemon *enemySupemon) {
+    float playerSpeed = (float)player->selectedSupemon->speed;
+    float enemySpeed = (float)enemySupemon->speed;
+    float runAwayChance = playerSpeed / (playerSpeed + enemySpeed);
+
+    // Generate a random number between 0 and 1
+    float randomValue = (float)rand() / RAND_MAX;
+
+    // Compare the random value to the run away chance
+    if (randomValue < runAwayChance) {
+        return true; // Successful escape
+    } else {
+        return false; // Failed escape
     }
 }
